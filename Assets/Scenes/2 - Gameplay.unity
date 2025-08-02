@@ -939,7 +939,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26b43d586d683e34eb3659f5709b41eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  conveyorPrefab: {fileID: 1670615115114450279, guid: d6a14a160887db44ca4eda0ce779a26d, type: 3}
+  buildableObjects:
+  - name: 
+    prefab: {fileID: 1670615115114450279, guid: d6a14a160887db44ca4eda0ce779a26d, type: 3}
+    hotkey: 257
+  - name: 
+    prefab: {fileID: 438353483788326181, guid: 7e198c10b27d9f2498bfabc68b26b15e, type: 3}
+    hotkey: 258
+  - name: 
+    prefab: {fileID: 664060450931899988, guid: 0e1a7ef1c435a3d429f9437512a8081b, type: 3}
+    hotkey: 259
+  - name: 
+    prefab: {fileID: 440772872570512487, guid: 0d9d3eb942724204baae8ccb8ed898df, type: 3}
+    hotkey: 260
+  - name: 
+    prefab: {fileID: 7078201380940734531, guid: 084e2f14356698f479ca440c24f9bc89, type: 3}
+    hotkey: 261
+  - name: 
+    prefab: {fileID: 6971056914224702757, guid: 72bbe78c7a2bf8f48b3dfd83d53228a7, type: 3}
+    hotkey: 262
   ghostPlaceColor: {r: 0.4842766, g: 0.73389894, b: 0.9685534, a: 1}
   deleteHighlightColor: {r: 0.8742138, g: 0.57164824, b: 0.39312124, a: 1}
   ghostTransparency: 0.5

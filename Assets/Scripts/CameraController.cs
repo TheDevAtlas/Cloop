@@ -48,7 +48,15 @@ public class CameraController : MonoBehaviour
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
         
-        Vector3 moveDirection = new Vector3(horizontal, 0, vertical) * moveSpeed * Time.deltaTime;
+        Vector3 forward = transform.forward;
+        Vector3 right = transform.right;
+        
+        forward.y = 0;
+        right.y = 0;
+        forward.Normalize();
+        right.Normalize();
+        
+        Vector3 moveDirection = (right * horizontal + forward * vertical) * moveSpeed * Time.deltaTime;
         targetPosition += moveDirection;
         
         targetPosition.x = Mathf.Clamp(targetPosition.x, -20f, 20f);

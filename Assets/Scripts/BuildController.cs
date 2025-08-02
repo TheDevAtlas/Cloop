@@ -1,9 +1,18 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[System.Serializable]
+public class BuildableObject
+{
+    public string name;
+    public GameObject prefab;
+    public KeyCode hotkey;
+}
+
 public class BuildController : MonoBehaviour
 {
-    [SerializeField] private GameObject conveyorPrefab;
+    [Header("Buildable Objects")]
+    [SerializeField] private List<BuildableObject> buildableObjects = new List<BuildableObject>();
     
     [Header("Build Mode Colors")]
     [SerializeField] private Color ghostPlaceColor = Color.blue;
@@ -11,21 +20,34 @@ public class BuildController : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] private float ghostTransparency = 0.5f;
     
     private bool buildMode = false;
-    private GameObject ghostConveyor;
+    private GameObject ghostObject;
     private Camera playerCamera;
     private float rotationY = 0f;
     private Vector3 lastPlacedPosition;
     private bool isDragging = false;
     private bool isDeletingLine = false;
-    private List<GameObject> placedConveyors = new List<GameObject>();
-    private GameObject currentHoveredConveyor;
+    private List<GameObject> placedObjects = new List<GameObject>();
+    private GameObject currentHoveredObject;
     private Dictionary<GameObject, Color[]> originalColors = new Dictionary<GameObject, Color[]>();
+    
+    // Current selected object type
+    private int selectedObjectIndex = 0;
+    private BuildableObject CurrentBuildableObject => 
+        buildableObjects.Count > 0 && selectedObjectIndex >= 0 && selectedObjectIndex < buildableObjects.Count 
+            ? buildableObjects[selectedObjectIndex] 
+            : null;
     
     void Start()
     {
         playerCamera = Camera.main;
         if (playerCamera == null)
             playerCamera = FindObjectOfType<Camera>();
+            
+        // Initialize with default objects if none are set
+        if (buildableObjects.Count == 0)
+        {
+            Debug.LogWarning("No buildable objects configured! Please set them up in the inspector.");
+        }
     }
     
     void Update()
@@ -35,9 +57,53 @@ public class BuildController : MonoBehaviour
             ToggleBuildMode();
         }
         
+        HandleObjectSelection();
+        
         if (buildMode)
         {
             HandleBuildMode();
+        }
+    }
+    
+    void HandleObjectSelection()
+    {
+        // Check number keys for object selection
+        for (int i = 0; i < buildableObjects.Count && i < 10; i++)
+        {
+            KeyCode numberKey = KeyCode.Alpha1 + i; // Alpha1 = 1, Alpha2 = 2, etc.
+            
+            if (Input.GetKeyDown(numberKey))
+            {
+                SelectObject(i);
+                break;
+            }
+        }
+        
+        // Also check for configured hotkeys
+        for (int i = 0; i < buildableObjects.Count; i++)
+        {
+            if (buildableObjects[i].hotkey != KeyCode.None && Input.GetKeyDown(buildableObjects[i].hotkey))
+            {
+                SelectObject(i);
+                break;
+            }
+        }
+    }
+    
+    void SelectObject(int index)
+    {
+        if (index >= 0 && index < buildableObjects.Count)
+        {
+            selectedObjectIndex = index;
+            
+            if (buildMode)
+            {
+                // Recreate ghost object with new type
+                DestroyGhostObject();
+                CreateGhostObject();
+            }
+            
+            Debug.Log($"Selected: {buildableObjects[selectedObjectIndex].name}");
         }
     }
     
@@ -47,12 +113,12 @@ public class BuildController : MonoBehaviour
         
         if (buildMode)
         {
-            CreateGhostConveyor();
+            CreateGhostObject();
         }
         else
         {
-            DestroyGhostConveyor();
-            RestoreHoveredConveyorColor();
+            DestroyGhostObject();
+            RestoreHoveredObjectColor();
             isDragging = false;
             isDeletingLine = false;
         }
@@ -60,13 +126,19 @@ public class BuildController : MonoBehaviour
     
     void HandleBuildMode()
     {
+        if (CurrentBuildableObject == null)
+        {
+            Debug.LogWarning("No buildable object selected!");
+            return;
+        }
+        
         Vector3 mousePosition = Input.mousePosition;
         Ray ray = playerCamera.ScreenPointToRay(mousePosition);
         
         RaycastHit[] hits = Physics.RaycastAll(ray);
         System.Array.Sort(hits, (x, y) => x.distance.CompareTo(y.distance));
         
-        GameObject hoveredBelt = null;
+        GameObject hoveredObject = null;
         Vector3 snapPosition = Vector3.zero;
         bool foundGround = false;
         
@@ -81,10 +153,10 @@ public class BuildController : MonoBehaviour
         
         foreach (RaycastHit hit in hits)
         {
-            GameObject hitConveyor = GetConveyorFromHit(hit.collider.gameObject);
-            if (hitConveyor != null)
+            GameObject hitObject = GetPlacedObjectFromHit(hit.collider.gameObject);
+            if (hitObject != null)
             {
-                hoveredBelt = hitConveyor;
+                hoveredObject = hitObject;
                 break;
             }
             
@@ -95,9 +167,9 @@ public class BuildController : MonoBehaviour
             }
         }
         
-        if (hoveredBelt != null)
+        if (hoveredObject != null)
         {
-            HandleExistingConveyor(hoveredBelt);
+            HandleExistingObject(hoveredObject);
         }
         else if (foundGround)
         {
@@ -108,40 +180,40 @@ public class BuildController : MonoBehaviour
         HandleDragging();
     }
     
-    void HandleExistingConveyor(GameObject conveyor)
+    void HandleExistingObject(GameObject obj)
     {
-        if (ghostConveyor != null)
+        if (ghostObject != null)
         {
-            ghostConveyor.SetActive(false);
+            ghostObject.SetActive(false);
         }
         
-        SetHoveredConveyor(conveyor);
+        SetHoveredObject(obj);
         
         if (Input.GetMouseButtonDown(0))
         {
             if (Input.GetKey(KeyCode.LeftShift))
             {
-                StartDeletingLine(conveyor);
+                StartDeletingLine(obj);
             }
             else
             {
-                placedConveyors.Remove(conveyor);
-                RestoreConveyorColor(conveyor);
-                Destroy(conveyor);
-                currentHoveredConveyor = null;
+                placedObjects.Remove(obj);
+                RestoreObjectColor(obj);
+                Destroy(obj);
+                currentHoveredObject = null;
             }
         }
     }
     
     void HandleEmptySpace(Vector3 position)
     {
-        RestoreHoveredConveyorColor();
+        RestoreHoveredObjectColor();
         
-        if (ghostConveyor != null)
+        if (ghostObject != null)
         {
-            ghostConveyor.SetActive(true);
-            ghostConveyor.transform.position = position;
-            ghostConveyor.transform.rotation = Quaternion.Euler(0, rotationY, 0);
+            ghostObject.SetActive(true);
+            ghostObject.transform.position = position;
+            ghostObject.transform.rotation = Quaternion.Euler(0, rotationY, 0);
             SetGhostColor(ghostPlaceColor);
         }
         
@@ -153,39 +225,39 @@ public class BuildController : MonoBehaviour
             }
             else
             {
-                PlaceConveyor(position);
+                PlaceObject(position);
             }
         }
     }
     
-    void SetHoveredConveyor(GameObject conveyor)
+    void SetHoveredObject(GameObject obj)
     {
-        if (currentHoveredConveyor == conveyor)
+        if (currentHoveredObject == obj)
             return;
         
-        RestoreHoveredConveyorColor();
+        RestoreHoveredObjectColor();
         
-        currentHoveredConveyor = conveyor;
+        currentHoveredObject = obj;
         
-        StoreOriginalColors(conveyor);
-        SetConveyorColor(conveyor, deleteHighlightColor);
+        StoreOriginalColors(obj);
+        SetObjectColor(obj, deleteHighlightColor);
     }
     
-    void RestoreHoveredConveyorColor()
+    void RestoreHoveredObjectColor()
     {
-        if (currentHoveredConveyor != null)
+        if (currentHoveredObject != null)
         {
-            RestoreConveyorColor(currentHoveredConveyor);
-            currentHoveredConveyor = null;
+            RestoreObjectColor(currentHoveredObject);
+            currentHoveredObject = null;
         }
     }
     
-    void StoreOriginalColors(GameObject conveyor)
+    void StoreOriginalColors(GameObject obj)
     {
-        if (originalColors.ContainsKey(conveyor))
+        if (originalColors.ContainsKey(obj))
             return;
         
-        Renderer[] renderers = conveyor.GetComponentsInChildren<Renderer>();
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
         List<Color> colors = new List<Color>();
         
         foreach (Renderer renderer in renderers)
@@ -196,16 +268,16 @@ public class BuildController : MonoBehaviour
             }
         }
         
-        originalColors[conveyor] = colors.ToArray();
+        originalColors[obj] = colors.ToArray();
     }
     
-    void RestoreConveyorColor(GameObject conveyor)
+    void RestoreObjectColor(GameObject obj)
     {
-        if (!originalColors.ContainsKey(conveyor))
+        if (!originalColors.ContainsKey(obj))
             return;
         
-        Renderer[] renderers = conveyor.GetComponentsInChildren<Renderer>();
-        Color[] storedColors = originalColors[conveyor];
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+        Color[] storedColors = originalColors[obj];
         int colorIndex = 0;
         
         foreach (Renderer renderer in renderers)
@@ -220,12 +292,12 @@ public class BuildController : MonoBehaviour
             }
         }
         
-        originalColors.Remove(conveyor);
+        originalColors.Remove(obj);
     }
     
-    void SetConveyorColor(GameObject conveyor, Color color)
+    void SetObjectColor(GameObject obj, Color color)
     {
-        Renderer[] renderers = conveyor.GetComponentsInChildren<Renderer>();
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
         foreach (Renderer renderer in renderers)
         {
             foreach (Material material in renderer.materials)
@@ -269,21 +341,21 @@ public class BuildController : MonoBehaviour
             Ray ray = playerCamera.ScreenPointToRay(mousePosition);
             
             RaycastHit[] hits = Physics.RaycastAll(ray);
-            GameObject hoveredConveyor = null;
+            GameObject hoveredObject = null;
             
             foreach (RaycastHit hit in hits)
             {
-                GameObject hitConveyor = GetConveyorFromHit(hit.collider.gameObject);
-                if (hitConveyor != null)
+                GameObject hitObject = GetPlacedObjectFromHit(hit.collider.gameObject);
+                if (hitObject != null)
                 {
-                    hoveredConveyor = hitConveyor;
+                    hoveredObject = hitObject;
                     break;
                 }
             }
             
-            if (hoveredConveyor != null)
+            if (hoveredObject != null)
             {
-                Vector3 currentPosition = hoveredConveyor.transform.position;
+                Vector3 currentPosition = hoveredObject.transform.position;
                 DeleteLine(lastPlacedPosition, currentPosition);
             }
         }
@@ -299,17 +371,17 @@ public class BuildController : MonoBehaviour
     {
         isDragging = true;
         lastPlacedPosition = startPosition;
-        PlaceConveyor(startPosition);
+        PlaceObject(startPosition);
     }
     
-    void StartDeletingLine(GameObject startConveyor)
+    void StartDeletingLine(GameObject startObject)
     {
         isDeletingLine = true;
-        lastPlacedPosition = startConveyor.transform.position;
-        placedConveyors.Remove(startConveyor);
-        RestoreConveyorColor(startConveyor);
-        Destroy(startConveyor);
-        currentHoveredConveyor = null;
+        lastPlacedPosition = startObject.transform.position;
+        placedObjects.Remove(startObject);
+        RestoreObjectColor(startObject);
+        Destroy(startObject);
+        currentHoveredObject = null;
     }
     
     void DrawLine(Vector3 start, Vector3 end)
@@ -330,9 +402,9 @@ public class BuildController : MonoBehaviour
         
         while (Vector3.Distance(start, currentPos) <= distance)
         {
-            if (GetConveyorAtPosition(currentPos) == null)
+            if (GetObjectAtPosition(currentPos) == null)
             {
-                PlaceConveyor(currentPos);
+                PlaceObject(currentPos);
             }
             currentPos += direction;
         }
@@ -356,44 +428,50 @@ public class BuildController : MonoBehaviour
         
         while (Vector3.Distance(start, currentPos) <= distance)
         {
-            GameObject conveyorToDelete = GetConveyorAtPosition(currentPos);
-            if (conveyorToDelete != null)
+            GameObject objectToDelete = GetObjectAtPosition(currentPos);
+            if (objectToDelete != null)
             {
-                placedConveyors.Remove(conveyorToDelete);
-                RestoreConveyorColor(conveyorToDelete);
-                Destroy(conveyorToDelete);
+                placedObjects.Remove(objectToDelete);
+                RestoreObjectColor(objectToDelete);
+                Destroy(objectToDelete);
             }
             currentPos += direction;
         }
     }
     
-    GameObject GetConveyorAtPosition(Vector3 position)
+    GameObject GetObjectAtPosition(Vector3 position)
     {
-        foreach (GameObject conveyor in placedConveyors)
+        foreach (GameObject obj in placedObjects)
         {
-            if (conveyor != null && Vector3.Distance(conveyor.transform.position, position) < 0.1f)
+            if (obj != null && Vector3.Distance(obj.transform.position, position) < 0.1f)
             {
-                return conveyor;
+                return obj;
             }
         }
         return null;
     }
     
-    void PlaceConveyor(Vector3 position)
+    void PlaceObject(Vector3 position)
     {
-        GameObject newConveyor = Instantiate(conveyorPrefab, position, Quaternion.Euler(0, rotationY, 0));
-        placedConveyors.Add(newConveyor);
+        if (CurrentBuildableObject == null || CurrentBuildableObject.prefab == null)
+        {
+            Debug.LogWarning("Cannot place object: no valid prefab selected!");
+            return;
+        }
+        
+        GameObject newObject = Instantiate(CurrentBuildableObject.prefab, position, Quaternion.Euler(0, rotationY, 0));
+        placedObjects.Add(newObject);
     }
     
-    GameObject GetConveyorFromHit(GameObject hitObject)
+    GameObject GetPlacedObjectFromHit(GameObject hitObject)
     {
-        foreach (GameObject conveyor in placedConveyors)
+        foreach (GameObject obj in placedObjects)
         {
-            if (conveyor == null) continue;
+            if (obj == null) continue;
             
-            if (hitObject == conveyor || hitObject.transform.IsChildOf(conveyor.transform))
+            if (hitObject == obj || hitObject.transform.IsChildOf(obj.transform))
             {
-                return conveyor;
+                return obj;
             }
         }
         return null;
@@ -408,11 +486,11 @@ public class BuildController : MonoBehaviour
         );
     }
     
-    void CreateGhostConveyor()
+    void CreateGhostObject()
     {
-        if (conveyorPrefab != null)
+        if (CurrentBuildableObject != null && CurrentBuildableObject.prefab != null)
         {
-            ghostConveyor = Instantiate(conveyorPrefab);
+            ghostObject = Instantiate(CurrentBuildableObject.prefab);
             RemoveGhostComponents();
             SetGhostColor(ghostPlaceColor);
         }
@@ -420,15 +498,15 @@ public class BuildController : MonoBehaviour
     
     void RemoveGhostComponents()
     {
-        if (ghostConveyor != null)
+        if (ghostObject != null)
         {
-            Collider[] colliders = ghostConveyor.GetComponentsInChildren<Collider>();
+            Collider[] colliders = ghostObject.GetComponentsInChildren<Collider>();
             foreach (Collider col in colliders)
             {
                 Destroy(col);
             }
             
-            MonoBehaviour[] scripts = ghostConveyor.GetComponentsInChildren<MonoBehaviour>();
+            MonoBehaviour[] scripts = ghostObject.GetComponentsInChildren<MonoBehaviour>();
             foreach (MonoBehaviour script in scripts)
             {
                 if (script != null && script.GetType() != typeof(Transform))
@@ -439,20 +517,20 @@ public class BuildController : MonoBehaviour
         }
     }
     
-    void DestroyGhostConveyor()
+    void DestroyGhostObject()
     {
-        if (ghostConveyor != null)
+        if (ghostObject != null)
         {
-            Destroy(ghostConveyor);
-            ghostConveyor = null;
+            Destroy(ghostObject);
+            ghostObject = null;
         }
     }
     
     void SetGhostColor(Color color)
     {
-        if (ghostConveyor != null)
+        if (ghostObject != null)
         {
-            Renderer[] renderers = ghostConveyor.GetComponentsInChildren<Renderer>();
+            Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
             foreach (Renderer renderer in renderers)
             {
                 foreach (Material material in renderer.materials)
