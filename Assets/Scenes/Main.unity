@@ -615,6 +615,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: X Belt
       objectReference: {fileID: 0}
+    - target: {fileID: 5562486888891433466, guid: fcfdbb448576c7e4f83a49ab58b7f6e1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -806,6 +810,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S Belt
       objectReference: {fileID: 0}
+    - target: {fileID: 6100489647179094915, guid: d6717c426c309374d9dea938b2c89d8a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6909255957260173625, guid: d6717c426c309374d9dea938b2c89d8a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -964,6 +972,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: C Belt
       objectReference: {fileID: 0}
+    - target: {fileID: 1433043249307715641, guid: f5586ef9773996248ad48d2e4e346923, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1776918072401220227, guid: f5586ef9773996248ad48d2e4e346923, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1091,6 +1103,10 @@ PrefabInstance:
     - target: {fileID: 1045398253435095183, guid: b2b7f1cc23c341e47bf49bb238f44f24, type: 3}
       propertyPath: m_Name
       value: T Belt
+      objectReference: {fileID: 0}
+    - target: {fileID: 1045398253435095183, guid: b2b7f1cc23c341e47bf49bb238f44f24, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

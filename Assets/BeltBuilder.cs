@@ -197,7 +197,23 @@ public class BeltBuilder : MonoBehaviour
         Vector3 position = ghostObject.transform.position;
         Vector3 gridPos = new Vector3(position.x, 0, position.z);
         
-        if (placedBelts.ContainsKey(gridPos)) return;
+        if (placedBelts.ContainsKey(gridPos))
+        {
+            bool[] currentConnections = GetConnections(gridPos);
+            int connectionCount = 0;
+            foreach (bool conn in currentConnections) if (conn) connectionCount++;
+            
+            if (connectionCount >= 2)
+            {
+                UpdateSingleBelt(gridPos);
+                return;
+            }
+        }
+        
+        if (placedBelts.ContainsKey(gridPos))
+        {
+            DestroyImmediate(placedBelts[gridPos].beltObject);
+        }
         
         GameObject newBelt = Instantiate(straightPiece, position, Quaternion.Euler(0, currentRotation, 0));
         placedBelts[gridPos] = new BeltData(newBelt, BeltType.Straight, currentRotation);
@@ -306,8 +322,6 @@ public class BeltBuilder : MonoBehaviour
             Vector3 pos = dragPath[i];
             Vector3 gridPos = new Vector3(pos.x, 0, pos.z);
             
-            if (placedBelts.ContainsKey(gridPos)) continue;
-            
             int rotation = CalculateRotationForPath(i);
             BeltType beltType = CalculateBeltTypeForPath(i);
             
@@ -393,15 +407,17 @@ public class BeltBuilder : MonoBehaviour
     
     int GetCornerRotation(Vector3 from, Vector3 to)
     {
-        if (Vector3.Dot(from, Vector3.forward) > 0.7f && Vector3.Dot(to, Vector3.right) > 0.7f) return 0;
-        if (Vector3.Dot(from, Vector3.right) > 0.7f && Vector3.Dot(to, Vector3.back) > 0.7f) return 90;
-        if (Vector3.Dot(from, Vector3.back) > 0.7f && Vector3.Dot(to, Vector3.left) > 0.7f) return 180;
-        if (Vector3.Dot(from, Vector3.left) > 0.7f && Vector3.Dot(to, Vector3.forward) > 0.7f) return 270;
+        if ((Vector3.Dot(from, Vector3.forward) > 0.7f && Vector3.Dot(to, Vector3.right) > 0.7f) ||
+            (Vector3.Dot(from, Vector3.left) > 0.7f && Vector3.Dot(to, Vector3.back) > 0.7f)) return 0;
         
-        if (Vector3.Dot(from, Vector3.forward) > 0.7f && Vector3.Dot(to, Vector3.left) > 0.7f) return 270;
-        if (Vector3.Dot(from, Vector3.left) > 0.7f && Vector3.Dot(to, Vector3.back) > 0.7f) return 180;
-        if (Vector3.Dot(from, Vector3.back) > 0.7f && Vector3.Dot(to, Vector3.right) > 0.7f) return 90;
-        if (Vector3.Dot(from, Vector3.right) > 0.7f && Vector3.Dot(to, Vector3.forward) > 0.7f) return 0;
+        if ((Vector3.Dot(from, Vector3.right) > 0.7f && Vector3.Dot(to, Vector3.back) > 0.7f) ||
+            (Vector3.Dot(from, Vector3.forward) > 0.7f && Vector3.Dot(to, Vector3.left) > 0.7f)) return 90;
+        
+        if ((Vector3.Dot(from, Vector3.back) > 0.7f && Vector3.Dot(to, Vector3.left) > 0.7f) ||
+            (Vector3.Dot(from, Vector3.right) > 0.7f && Vector3.Dot(to, Vector3.forward) > 0.7f)) return 180;
+        
+        if ((Vector3.Dot(from, Vector3.left) > 0.7f && Vector3.Dot(to, Vector3.forward) > 0.7f) ||
+            (Vector3.Dot(from, Vector3.back) > 0.7f && Vector3.Dot(to, Vector3.right) > 0.7f)) return 270;
         
         return 0;
     }
@@ -417,22 +433,41 @@ public class BeltBuilder : MonoBehaviour
             Vector3 pos = dragPath[i];
             Vector3 gridPos = new Vector3(pos.x, 0, pos.z);
             
-            if (placedBelts.ContainsKey(gridPos)) continue;
-            
             int rotation = CalculateRotationForPath(i);
             BeltType beltType = CalculateBeltTypeForPath(i);
             
             GameObject prefab = GetPrefabForType(beltType);
             if (prefab == null) continue;
             
+            if (placedBelts.ContainsKey(gridPos))
+            {
+                DestroyImmediate(placedBelts[gridPos].beltObject);
+            }
+            
             GameObject newBelt = Instantiate(prefab, pos, Quaternion.Euler(0, rotation, 0));
             placedBelts[gridPos] = new BeltData(newBelt, beltType, rotation);
         }
         
+        HashSet<Vector3> positionsToUpdate = new HashSet<Vector3>();
         foreach (Vector3 pos in dragPath)
         {
             Vector3 gridPos = new Vector3(pos.x, 0, pos.z);
-            UpdateConnections(gridPos);
+            positionsToUpdate.Add(gridPos);
+            
+            Vector3[] directions = { Vector3.forward, Vector3.right, Vector3.back, Vector3.left };
+            foreach (Vector3 dir in directions)
+            {
+                Vector3 neighborPos = gridPos + dir;
+                if (placedBelts.ContainsKey(neighborPos))
+                {
+                    positionsToUpdate.Add(neighborPos);
+                }
+            }
+        }
+        
+        foreach (Vector3 pos in positionsToUpdate)
+        {
+            UpdateSingleBelt(pos);
         }
         
         ClearDragGhosts();
@@ -477,7 +512,6 @@ public class BeltBuilder : MonoBehaviour
         if (!placedBelts.ContainsKey(position)) return;
         
         BeltData beltData = placedBelts[position];
-        
         bool[] connections = GetConnections(position);
         int connectionCount = 0;
         foreach (bool conn in connections) if (conn) connectionCount++;
@@ -485,35 +519,36 @@ public class BeltBuilder : MonoBehaviour
         BeltType newType = BeltType.Straight;
         int newRotation = 0;
         
-        if (connectionCount == 2)
+        switch (connectionCount)
         {
-            if ((connections[0] && connections[2]) || (connections[1] && connections[3]))
-            {
+            case 0:
+            case 1:
                 newType = BeltType.Straight;
-                if (connections[0] && connections[2]) newRotation = 0;
-                else newRotation = 90;
-            }
-            else
-            {
-                newType = BeltType.Corner;
-                newRotation = GetCornerRotationFromConnections(connections);
-            }
-        }
-        else if (connectionCount == 1)
-        {
-            newType = BeltType.Straight;
-            for (int i = 0; i < 4; i++)
-            {
-                if (connections[i])
+                newRotation = GetStraightRotationFromConnections(connections);
+                break;
+                
+            case 2:
+                if (IsOppositeConnections(connections))
                 {
-                    newRotation = i * 90;
-                    break;
+                    newType = BeltType.Straight;
+                    newRotation = GetStraightRotationFromConnections(connections);
                 }
-            }
-        }
-        else if (connectionCount >= 3)
-        {
-            newType = BeltType.Straight;
+                else
+                {
+                    newType = BeltType.Corner;
+                    newRotation = GetCornerRotationFromConnections(connections);
+                }
+                break;
+                
+            case 3:
+                newType = BeltType.T;
+                newRotation = GetTRotationFromConnections(connections);
+                break;
+                
+            case 4:
+                newType = BeltType.Cross;
+                newRotation = 0;
+                break;
         }
         
         if (newType != beltData.type || newRotation != beltData.rotation)
@@ -542,12 +577,40 @@ public class BeltBuilder : MonoBehaviour
         return connections;
     }
     
+    bool IsOppositeConnections(bool[] connections)
+    {
+        return (connections[0] && connections[2]) || (connections[1] && connections[3]);
+    }
+    
+    int GetStraightRotationFromConnections(bool[] connections)
+    {
+        if (connections[0] || connections[2]) return 0;
+        if (connections[1] || connections[3]) return 90;
+        
+        for (int i = 0; i < 4; i++)
+        {
+            if (connections[i]) return i * 90;
+        }
+        
+        return 0;
+    }
+    
     int GetCornerRotationFromConnections(bool[] connections)
     {
         if (connections[0] && connections[1]) return 0;
         if (connections[1] && connections[2]) return 90;
         if (connections[2] && connections[3]) return 180;
         if (connections[3] && connections[0]) return 270;
+        
+        return 0;
+    }
+    
+    int GetTRotationFromConnections(bool[] connections)
+    {
+        if (connections[1] && connections[2] && connections[3]) return 0;
+        if (connections[0] && connections[2] && connections[3]) return 90;
+        if (connections[0] && connections[1] && connections[3]) return 180;
+        if (connections[0] && connections[1] && connections[2]) return 270;
         
         return 0;
     }
