@@ -8,6 +8,8 @@ public class Converter : Belt
     public GameObject outputItemPrefab;     // What item type we produce
     public float conversionTime = 1f;       // Time to complete conversion
     public float ejectForce = 5f;          // Force applied to ejected items
+
+    public ProductType Product;
     
     private bool _isConverting = false;
     private float _conversionProgress = 0f;
@@ -91,6 +93,8 @@ public class Converter : Belt
         
         // Create new item at the same position (already at correct height)
         GameObject newItem = Instantiate(outputItemPrefab, itemPosition, Quaternion.identity);
+
+        ObjectivesManager.Instance.Produce(Product);
         
         // Update BeltItem reference
         BeltItem newBeltItem = newItem.GetComponent<BeltItem>();

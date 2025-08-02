@@ -1731,8 +1731,13 @@ MonoBehaviour:
     currentAmount: 0
     isCompleted: 0
   - description: Get 35 Somethings
-    requiredProduct: 5
+    requiredProduct: 2
     targetAmount: 35
+    currentAmount: 0
+    isCompleted: 0
+  - description: Get 150 Chickens
+    requiredProduct: 1
+    targetAmount: 150
     currentAmount: 0
     isCompleted: 0
   objectiveUIPrefab: {fileID: 4475866992556025026, guid: 3128c3f43b0e89e4a85fcae06437ffab, type: 3}
@@ -1764,7 +1769,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  maxActiveObjectives: 3
+  maxActiveObjectives: 2
+  completionCounterText: {fileID: 2042774690}
 --- !u!1 &2042774688
 GameObject:
   m_ObjectHideFlags: 0
@@ -1799,7 +1805,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 11.4, y: -3}
+  m_AnchoredPosition: {x: 11.4, y: -15.85}
   m_SizeDelta: {x: 409.7778, y: 56.0115}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2042774690
@@ -1822,9 +1828,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '0/15 OBJECTIVES COMPLETED
-
-    0/15 DISCOVERIES DISCOVERED'
+  m_text: 0/15 OBJECTIVES COMPLETED
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7f7418cc2035a434dbe25b31e6b27e7f, type: 2}
   m_sharedMaterial: {fileID: -2259419173269195472, guid: 7f7418cc2035a434dbe25b31e6b27e7f, type: 2}
@@ -1939,7 +1943,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: -10}
-  m_SizeDelta: {x: 247.2891, y: 56.5692}
+  m_SizeDelta: {x: 257.16, y: 56.5692}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2138847141
 MonoBehaviour:

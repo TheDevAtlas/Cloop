@@ -37,14 +37,8 @@ public class Objective
 public enum ProductType
 {
     Egg,
-    Milk,
-    Bread,
-    Cheese,
-    Butter,
-    Meat,
-    Vegetables,
-    Fruit
-    // Add more product types as needed
+    Chicken,
+    Nugget
 }
 
 public class ObjectivesManager : MonoBehaviour
@@ -65,11 +59,16 @@ public class ObjectivesManager : MonoBehaviour
     [Header("Objective Display")]
     [SerializeField] private int maxActiveObjectives = 2;
     
+    [Header("Completion Counter")]
+    [SerializeField] private TextMeshProUGUI completionCounterText;
+    
     // Private variables
     private Queue<Objective> objectiveQueue = new Queue<Objective>();
     private List<Objective> activeObjectives = new List<Objective>();
     private List<ObjectiveUI> activeObjectiveUIs = new List<ObjectiveUI>();
     private int currentObjectiveIndex = 0;
+    private int totalObjectivesCount = 0;
+    private int completedObjectivesCount = 0;
     
     // Events
     public event Action<Objective> OnObjectiveCompleted;
@@ -94,6 +93,7 @@ public class ObjectivesManager : MonoBehaviour
     private void Start()
     {
         StartInitialObjectives();
+        UpdateCompletionCounter();
     }
     
     private void InitializeObjectives()
@@ -104,6 +104,10 @@ public class ObjectivesManager : MonoBehaviour
             objective.currentAmount = 0;
             objective.isCompleted = false;
         }
+        
+        // Set total objectives count
+        totalObjectivesCount = allObjectives.Count;
+        completedObjectivesCount = 0;
         
         // Add all objectives to queue
         objectiveQueue.Clear();
@@ -246,6 +250,10 @@ public class ObjectivesManager : MonoBehaviour
             ObjectiveUI uiToRemove = activeObjectiveUIs[objectiveIndex];
             RectTransform rectTransform = uiToRemove.GetComponent<RectTransform>();
             
+            // Increment completed objectives counter
+            completedObjectivesCount++;
+            UpdateCompletionCounter();
+            
             // Animate out and then destroy
             StartCoroutine(AnimateObjectiveOut(rectTransform, () => 
             {
@@ -259,6 +267,14 @@ public class ObjectivesManager : MonoBehaviour
                 // Activate next objective if available
                 ActivateNextObjective();
             }));
+        }
+    }
+    
+    private void UpdateCompletionCounter()
+    {
+        if (completionCounterText != null)
+        {
+            completionCounterText.text = $"{completedObjectivesCount}/{totalObjectivesCount} Objectives Completed";
         }
     }
     
@@ -311,6 +327,16 @@ public class ObjectivesManager : MonoBehaviour
         return activeObjectives.Count > 0;
     }
     
+    public int GetCompletedObjectivesCount()
+    {
+        return completedObjectivesCount;
+    }
+    
+    public int GetTotalObjectivesCount()
+    {
+        return totalObjectivesCount;
+    }
+    
     public void ResetAllObjectives()
     {
         // Clear active objectives and UIs
@@ -328,12 +354,15 @@ public class ObjectivesManager : MonoBehaviour
         // Reinitialize
         InitializeObjectives();
         StartInitialObjectives();
+        UpdateCompletionCounter();
     }
     
     // Method to add objectives at runtime
     public void AddObjective(Objective newObjective)
     {
         allObjectives.Add(newObjective);
+        totalObjectivesCount++;
+        UpdateCompletionCounter();
         
         if (activeObjectives.Count < maxActiveObjectives)
         {

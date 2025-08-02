@@ -250,6 +250,7 @@ MonoBehaviour:
   outputItemPrefab: {fileID: 6636454637368231727, guid: 4ee079e4e08f25a4d8b0ef624d9702e9, type: 3}
   conversionTime: 1
   ejectForce: 5
+  Product: 2
 --- !u!1 &9051165245569842323
 GameObject:
   m_ObjectHideFlags: 0

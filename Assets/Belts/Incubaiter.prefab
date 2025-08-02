@@ -78,6 +78,7 @@ MonoBehaviour:
   outputItemPrefab: {fileID: 5557612974945013992, guid: 14d91a3f7203ac74baa83a0f56514ee0, type: 3}
   conversionTime: 1
   ejectForce: 5
+  Product: 1
 --- !u!1 &517084825861233700
 GameObject:
   m_ObjectHideFlags: 0
