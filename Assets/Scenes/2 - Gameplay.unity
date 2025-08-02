@@ -1228,11 +1228,20 @@ MonoBehaviour:
     prefab: {fileID: 440772872570512487, guid: 0d9d3eb942724204baae8ccb8ed898df, type: 3}
     hotkey: 260
   - name: 
-    prefab: {fileID: 7078201380940734531, guid: 084e2f14356698f479ca440c24f9bc89, type: 3}
+    prefab: {fileID: 6971056914224702757, guid: 72bbe78c7a2bf8f48b3dfd83d53228a7, type: 3}
     hotkey: 261
   - name: 
-    prefab: {fileID: 6971056914224702757, guid: 72bbe78c7a2bf8f48b3dfd83d53228a7, type: 3}
+    prefab: {fileID: 3383021595348630265, guid: b06eca33ab7c19f41aa789993da3216b, type: 3}
     hotkey: 262
+  - name: 
+    prefab: {fileID: 3412352674590498948, guid: 105c7401019b4524fad8df29f971b807, type: 3}
+    hotkey: 263
+  - name: 
+    prefab: {fileID: 8191205140800170514, guid: f31d68ea54ae8b7448a33e57e8ab585b, type: 3}
+    hotkey: 264
+  - name: 
+    prefab: {fileID: 6542038640827392081, guid: c9b4d36bf0b08b34e8f460e67d534f34, type: 3}
+    hotkey: 265
   ghostPlaceColor: {r: 0.4842766, g: 0.73389894, b: 0.9685534, a: 1}
   deleteHighlightColor: {r: 0.8742138, g: 0.57164824, b: 0.39312124, a: 1}
   ghostTransparency: 0.5
@@ -1456,7 +1465,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1745819671
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1720,22 +1729,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   allObjectives:
-  - description: Get 15 Eggs
+  - description: Create 15 Eggs
     requiredProduct: 0
     targetAmount: 15
     currentAmount: 0
     isCompleted: 0
-  - description: Get 50 Chickens
+  - description: Create 25 Chickens
     requiredProduct: 1
-    targetAmount: 50
+    targetAmount: 25
     currentAmount: 0
     isCompleted: 0
-  - description: Get 35 Somethings
+  - description: Create 15 Chicken Cutlets
     requiredProduct: 2
-    targetAmount: 35
+    targetAmount: 15
     currentAmount: 0
     isCompleted: 0
-  - description: Get 150 Chickens
+  - description: Create 25 Lightning Chickens
     requiredProduct: 1
     targetAmount: 150
     currentAmount: 0
