@@ -67,7 +67,7 @@ public class CameraController : MonoBehaviour
     {
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         targetZoom += scroll * zoomSpeed;
-        targetZoom = Mathf.Clamp(targetZoom, -20f, -5f);
+        targetZoom = Mathf.Clamp(targetZoom, -20f, -2.5f);
     }
     
     void HandleRotation()
