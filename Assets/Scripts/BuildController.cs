@@ -16,6 +16,7 @@ public class BuildController : MonoBehaviour
     private float rotationY = 0f;
     private Vector3 lastPlacedPosition;
     private bool isDragging = false;
+    private bool isDeletingLine = false;
     private List<GameObject> placedConveyors = new List<GameObject>();
     private GameObject currentHoveredConveyor;
     private Dictionary<GameObject, Color[]> originalColors = new Dictionary<GameObject, Color[]>();
@@ -53,6 +54,7 @@ public class BuildController : MonoBehaviour
             DestroyGhostConveyor();
             RestoreHoveredConveyorColor();
             isDragging = false;
+            isDeletingLine = false;
         }
     }
     
@@ -117,10 +119,17 @@ public class BuildController : MonoBehaviour
         
         if (Input.GetMouseButtonDown(0))
         {
-            placedConveyors.Remove(conveyor);
-            RestoreConveyorColor(conveyor);
-            Destroy(conveyor);
-            currentHoveredConveyor = null;
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                StartDeletingLine(conveyor);
+            }
+            else
+            {
+                placedConveyors.Remove(conveyor);
+                RestoreConveyorColor(conveyor);
+                Destroy(conveyor);
+                currentHoveredConveyor = null;
+            }
         }
     }
     
@@ -254,9 +263,35 @@ public class BuildController : MonoBehaviour
             }
         }
         
+        if (isDeletingLine && Input.GetKey(KeyCode.LeftShift))
+        {
+            Vector3 mousePosition = Input.mousePosition;
+            Ray ray = playerCamera.ScreenPointToRay(mousePosition);
+            
+            RaycastHit[] hits = Physics.RaycastAll(ray);
+            GameObject hoveredConveyor = null;
+            
+            foreach (RaycastHit hit in hits)
+            {
+                GameObject hitConveyor = GetConveyorFromHit(hit.collider.gameObject);
+                if (hitConveyor != null)
+                {
+                    hoveredConveyor = hitConveyor;
+                    break;
+                }
+            }
+            
+            if (hoveredConveyor != null)
+            {
+                Vector3 currentPosition = hoveredConveyor.transform.position;
+                DeleteLine(lastPlacedPosition, currentPosition);
+            }
+        }
+        
         if (Input.GetMouseButtonUp(0))
         {
             isDragging = false;
+            isDeletingLine = false;
         }
     }
     
@@ -265,6 +300,16 @@ public class BuildController : MonoBehaviour
         isDragging = true;
         lastPlacedPosition = startPosition;
         PlaceConveyor(startPosition);
+    }
+    
+    void StartDeletingLine(GameObject startConveyor)
+    {
+        isDeletingLine = true;
+        lastPlacedPosition = startConveyor.transform.position;
+        placedConveyors.Remove(startConveyor);
+        RestoreConveyorColor(startConveyor);
+        Destroy(startConveyor);
+        currentHoveredConveyor = null;
     }
     
     void DrawLine(Vector3 start, Vector3 end)
@@ -288,6 +333,35 @@ public class BuildController : MonoBehaviour
             if (GetConveyorAtPosition(currentPos) == null)
             {
                 PlaceConveyor(currentPos);
+            }
+            currentPos += direction;
+        }
+    }
+    
+    void DeleteLine(Vector3 start, Vector3 end)
+    {
+        Vector3 direction = (end - start).normalized;
+        float distance = Vector3.Distance(start, end);
+        
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+        {
+            direction = new Vector3(Mathf.Sign(direction.x), 0, 0);
+        }
+        else
+        {
+            direction = new Vector3(0, 0, Mathf.Sign(direction.z));
+        }
+        
+        Vector3 currentPos = start + direction;
+        
+        while (Vector3.Distance(start, currentPos) <= distance)
+        {
+            GameObject conveyorToDelete = GetConveyorAtPosition(currentPos);
+            if (conveyorToDelete != null)
+            {
+                placedConveyors.Remove(conveyorToDelete);
+                RestoreConveyorColor(conveyorToDelete);
+                Destroy(conveyorToDelete);
             }
             currentPos += direction;
         }
