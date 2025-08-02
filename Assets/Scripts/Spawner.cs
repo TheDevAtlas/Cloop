@@ -61,6 +61,9 @@ public class Spawner : MonoBehaviour
         // Create the item at consistent height
         GameObject newItem = Instantiate(itemPrefab, GetSpawnPosition(), Quaternion.identity);
 
+        // ADD TO OBJECTIVES
+        ObjectivesManager.Instance.Produce(ProductType.Egg);
+
         // Create BeltItem wrapper
         _currentItem = newItem.GetComponent<BeltItem>();
         
