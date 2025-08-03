@@ -36,9 +36,13 @@ public class Objective
 
 public enum ProductType
 {
+    Grass,
     Egg,
     Chicken,
-    Nugget
+    Nugget,
+    LavaChicken,
+    LightningChicken,
+    NuclearChicken
 }
 
 public class ObjectivesManager : MonoBehaviour

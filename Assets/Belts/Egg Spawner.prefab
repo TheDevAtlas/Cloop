@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9085887302776465543}
   - component: {fileID: 7999862509246691323}
-  - component: {fileID: 1920767696932720353}
+  - component: {fileID: -6050758939176645352}
   m_Layer: 3
   m_Name: Egg Spawner
   m_TagString: Untagged
@@ -60,7 +60,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.5, z: 1}
   m_Center: {x: 0, y: 0.25, z: 0}
---- !u!114 &1920767696932720353
+--- !u!114 &-6050758939176645352
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -69,16 +69,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 664060450931899988}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8a0605a20465c64f85bd873ff2eb933, type: 3}
+  m_Script: {fileID: 11500000, guid: 67fa0ede40cb87a40b309c3430302439, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 5791335225141235993, guid: 8b751c7536ab790418e55c82deaccb6c, type: 3}
-  spawnInterval: 2
-  spawnPoint: {fileID: 4407700696985096812}
-  connectedBelt: {fileID: 0}
-  _currentItem: {fileID: 0}
-  _isMovingItem: 0
-  _productionStopped: 0
+  beltInSequence: {fileID: 0}
+  beltItem: {fileID: 0}
+  isSpaceTaken: 0
+  _beltManager: {fileID: 0}
+  inputItemPrefab: {fileID: 2601900006683531666, guid: 7a4ebefce203b22439ab6073f162c53d, type: 3}
+  outputItemPrefab: {fileID: 5791335225141235993, guid: 8b751c7536ab790418e55c82deaccb6c, type: 3}
+  conversionTime: 1
+  ejectForce: 5
+  Product: 0
 --- !u!1 &3170257836385620168
 GameObject:
   m_ObjectHideFlags: 0

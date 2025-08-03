@@ -96,7 +96,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8512898532466257577}
   - component: {fileID: 4156677750552192232}
-  - component: {fileID: 8540197211127297346}
+  - component: {fileID: 3429627084398983051}
   m_Layer: 3
   m_Name: GreenHouse
   m_TagString: Untagged
@@ -145,7 +145,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.5, z: 1}
   m_Center: {x: 0, y: 0.25, z: 0}
---- !u!114 &8540197211127297346
+--- !u!114 &3429627084398983051
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -154,18 +154,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 6542038640827392081}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67fa0ede40cb87a40b309c3430302439, type: 3}
+  m_Script: {fileID: 11500000, guid: f8a0605a20465c64f85bd873ff2eb933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  beltInSequence: {fileID: 0}
-  beltItem: {fileID: 0}
-  isSpaceTaken: 0
-  _beltManager: {fileID: 0}
-  inputItemPrefab: {fileID: 5791335225141235993, guid: 8b751c7536ab790418e55c82deaccb6c, type: 3}
-  outputItemPrefab: {fileID: 5557612974945013992, guid: 14d91a3f7203ac74baa83a0f56514ee0, type: 3}
-  conversionTime: 1
-  ejectForce: 5
-  Product: 1
+  itemPrefab: {fileID: 2601900006683531666, guid: 7a4ebefce203b22439ab6073f162c53d, type: 3}
+  spawnInterval: 2
+  spawnPoint: {fileID: 8512898532466257577}
+  connectedBelt: {fileID: 0}
+  _currentItem: {fileID: 0}
+  _isMovingItem: 0
+  _productionStopped: 0
 --- !u!1 &6595581415325814887
 GameObject:
   m_ObjectHideFlags: 0
